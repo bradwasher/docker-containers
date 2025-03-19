@@ -1,0 +1,10 @@
+services:
+  dhcpd:
+    image: dhcpd:latest
+    container_name: dhcpd
+    network_mode: host
+    privileged: true
+    command: /bin/start_dhcpd.sh
+    environment: 
+      - AP_INTERFACE=wlan1
+      - OUTBOUND_INTERFACE=wlan0

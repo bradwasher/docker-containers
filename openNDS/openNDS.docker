@@ -1,0 +1,27 @@
+FROM alpine:3.21.3 AS build
+
+# install libraries necessary to get and compile openNDS
+RUN apk update && apk add --no-cache git make libmicrohttpd-dev gcc musl-dev linux-headers
+
+
+# Get and install opennds
+RUN git clone https://github.com/openNDS/openNDS
+WORKDIR /openNDS
+RUN make
+RUN make install
+
+# create final image and move compiled binaries  
+FROM alpine:3.21.3
+RUN apk update && apk add --no-cache libmicrohttpd-dev dnsmasq
+
+COPY --from=build /usr/bin/opennds /usr/bin/opennds
+COPY --from=build /usr/bin/ndsctl /usr/bin/ndsctl
+COPY --from=build /etc/opennds/ /etc/opennds/
+COPY --from=build /etc/config/opennds /etc/config/opennds
+COPY --from=build /etc/systemd/system/opennds.service /etc/systemd/system/
+COPY --from=build /usr/lib/opennds/ /usr/lib/opennds
+#COPY --from=build /etc/config/opennds.default /etc/config/opennds.default
+
+COPY start_opennds.sh /bin/start_opennds.sh
+RUN chmod +x /bin/start_opennds.sh
+

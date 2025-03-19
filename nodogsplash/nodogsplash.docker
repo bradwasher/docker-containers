@@ -1,0 +1,24 @@
+FROM alpine:3.21.3 AS build
+
+# install libraries necessary to get and compile nodogsplash
+RUN apk update && apk add --no-cache git make libmicrohttpd-dev gcc musl-dev linux-headers
+   
+    
+# Get and install nodogsplash
+RUN git clone https://github.com/nodogsplash/nodogsplash.git
+WORKDIR /nodogsplash
+RUN make 
+RUN make install
+    
+# create final image and move compiled binaries  
+FROM alpine:3.21.3
+RUN apk update && apk add --no-cache libmicrohttpd-dev iptables
+
+COPY --from=build /usr/bin/nodogsplash /usr/bin/nodogsplash
+COPY --from=build /usr/bin/ndsctl /usr/bin/ndsctl
+COPY --from=build /etc/nodogsplash/ /etc/nodogsplash/
+
+RUN mv /etc/nodogsplash/nodogsplash.conf /etc/nodogsplash/nodogsplash.conf.bak
+
+COPY start_nodogsplash.sh /bin/start_nodogsplash.sh
+RUN chmod +x /bin/start_nodogsplash.sh

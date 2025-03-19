@@ -1,0 +1,10 @@
+FROM alpine:3.21.3
+
+# Update and install packages
+RUN apk update
+RUN apk add --no-cache kea-dhcp4
+
+RUN mkdir -p /run/kea
+
+COPY start_dhcpd.sh /bin/start_dhcpd.sh
+RUN chmod +x /bin/start_dhcpd.sh

@@ -1,0 +1,11 @@
+services:
+
+  nodogsplash:
+    image: nodogsplash:latest
+    container_name: nodog
+    network_mode: host
+    privileged: true
+    #command: /bin/start_nodogsplash.sh
+    environment:
+      - INTERFACE=wlan1
+

@@ -1,0 +1,10 @@
+FROM alpine:3.21.3
+
+# Update and install hostapd
+RUN apk update
+RUN apk add --no-cache hostapd iw iptables
+
+RUN mv /etc/hostapd/hostapd.conf /etc/hostapd/hostapd.conf.bak
+
+COPY start_hostapd.sh /bin/start_hostapd.sh
+RUN chmod +x /bin/start_hostapd.sh

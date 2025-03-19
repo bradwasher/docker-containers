@@ -1,0 +1,11 @@
+FROM alpine:3.21.3
+
+# Update and install dnsmasq, iw, and iptables
+RUN apk update
+RUN apk add --no-cache dnsmasq iw iptables
+
+RUN mkdir -p /var/lib/dnsmasq/
+RUN touch /var/lib/dnsmasq/dnsmasq.leases
+
+COPY start_dnsmasq.sh /bin/start_dnsmasq.sh
+RUN chmod +x /bin/start_dnsmasq.sh
