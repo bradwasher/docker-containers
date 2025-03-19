@@ -1,0 +1,15 @@
+# To build the docker images run the following:
+
+# AIS Dispatcher
+docker build -t ais-dispatcher:202502.rc1 -f ais-dispatcher.docker .
+
+#AIS to COT
+docker build -t ais-to-cot:202502.rc1 -f ais-to-cot.docker .
+
+# Before starting, ensure traffice being multicast to 239.23.212.230 has a route otherwise the ais-o-cot will throw errors
+# e.g. ip route add 239.23.212.230 dev eth0
+
+# To start the containers run the following in this directory:
+
+docker compose up
+

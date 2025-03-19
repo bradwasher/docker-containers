@@ -1,0 +1,30 @@
+version: '3'
+services:
+  # this docker compose starts containers for bot the ais-dispatcher and ais-to-cot services
+
+
+  # takes AIS over RF and broadcasts it to network
+  ais-dispatcher:
+    image: ais-dispatcher:202502.rc1
+    restart: always
+    network_mode: host  
+    working_dir: /opt/ais/
+    privileged: true
+
+    # For daisy ais use the following:
+    #command: /opt/ais/aisdispatcher_linux-1.2_glibc-2.15/aisdispatcher-x86_64 -g -G -r -d /dev/ttyACM0 -s 38400 -H localhost:5050
+    
+    # For R400NG ais use the following:
+    command: /opt/ais/aisdispatcher_linux-1.2_glibc-2.15/aisdispatcher-x86_64 -ugvG -h 10.10.1.255 -p 5000 -H localhost:5050  
+ 
+
+  # takes AIS network broadcast and converts to COT and sends to multicast address
+  ais-to-cot:
+    image: ais-to-cot:202502.rc1
+    restart: always
+    network_mode: host
+    working_dir: /opt/ais
+    privileged: true
+    command: aiscot -c /opt/ais/aiscot/config.ini
+
+

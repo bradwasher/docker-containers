@@ -1,0 +1,33 @@
+FROM python:3.10-bullseye
+
+RUN mkdir -p /opt/ais
+WORKDIR /opt/ais
+
+RUN apt update
+RUN apt install -y  git
+
+# get ais to cot
+RUN wget https://github.com/snstac/pytak/releases/latest/download/pytak_latest_all.deb
+RUN apt install -y -f ./pytak_latest_all.deb
+RUN wget https://github.com/snstac/aiscot/releases/latest/download/aiscot_latest_all.deb
+RUN apt install -y -f ./aiscot_latest_all.deb
+RUN git clone https://github.com/snstac/aiscot
+RUN rm *.deb
+
+RUN mkdir -p /usr/lib/python3/dist-packages/aiscot/data/
+RUN cp /opt/ais/aiscot/src/aiscot/data/MaritimeIdentificationDigits-bb62983a-cf0e-40a1-9431-cd54eaeb1c85.csv /usr/lib/python3/dist-packages/aiscot/data/
+RUN cp /opt/ais/aiscot/src/aiscot/data/yadd_mmsi_ship_2023-02-11-001541.txt /usr/lib/python3/dist-packages/aiscot/data/
+RUN cp /opt/ais/aiscot/src/aiscot/data/yadd_mmsi_coast_2021-11-03-163012.txt /usr/lib/python3/dist-packages/aiscot/data/
+RUN rm -rf /opt/ais/aiscot/*
+
+# set up aiscot config
+RUN echo "[aiscot]" > /opt/ais/aiscot/config.ini
+RUN echo "COT_URL=udp+broadcast://239.23.212.230:18999" >> /opt/ais/aiscot/config.ini
+RUN echo "AIS_PORT=5050 #cant override for some reason" >> /opt/ais/aiscot/config.ini
+RUN echo "DEBUG=1" >> /opt/ais/aiscot/config.ini
+
+# copy updted functions.py file to image
+# this replacs the COT ID of the vessel which defaults to the MMSI with the vessel callsign which is usually the vessel name
+COPY ./functions.py /usr/lib/python3/dist-packages/aiscot/functions.py
+
+# docker build -t ais-to-cot:202502.rc1 -f ais-to-cot.docker .

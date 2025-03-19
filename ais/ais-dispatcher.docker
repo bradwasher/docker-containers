@@ -1,0 +1,14 @@
+FROM python:3.10-bullseye
+
+RUN mkdir -p /opt/ais
+WORKDIR /opt/ais
+
+RUN apt update
+RUN apt install -y iproute2 wget aha
+
+# get ais dispatcher binary for direct dispatcher
+RUN wget http://www.aishub.net/downloads/aisdispatcher_linux-1.2_glibc-2.15.tar.gz
+RUN tar -xzf aisdispatcher_linux-1.2_glibc-2.15.tar.gz
+RUN rm aisdispatcher_linux-1.2_glibc-2.15.tar.gz
+
+# docker build -t ais-dispatcher:202502.rc1 -f ais-dispatcher.docker .
