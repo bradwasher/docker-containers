@@ -37,6 +37,10 @@ fi
 : ${SEC_DNS:=8.8.8.8}
 
 # Function to configure dhcp4
+# "service-sockets-require-all": true -> exit if interface isn't up or port is already bound
+# or use these to configure to attempt to retry for x amount of times to bind to the port
+# "service-sockets-max-retries": 5 -> default is to not retry
+# "service-sockets-retry-wait-time": 5000 -> time in milliseconds to retry
 configure_dhcp() {
     cat > "/etc/kea-dhcp4.conf" <<EOF
 {
@@ -44,7 +48,8 @@ configure_dhcp() {
     "interfaces-config": {
       "interfaces": [
         "${INTERFACE}"
-      ]
+      ],
+    "service-sockets-require-all": true
     },
     "lease-database": {
       "type": "memfile",
@@ -78,13 +83,33 @@ configure_dhcp() {
     "loggers": [
       {
         "name": "kea-dhcp4",
+	"severity": "INFO",
         "output_options": [
           {
-            "output": "/tmp/kea-dhcp4.log",
+            "output": "stdout",
             "maxver": 10
           }
         ],
-        "severity": "INFO"
+      },
+	{
+        "name": "kea-dhcp4.dhcpsrv",
+        "severity": "INFO",
+        "output_options": [
+          {
+            "output": "stdout",
+            "maxver": 10
+          }
+        ]
+      },
+      {
+        "name": "kea-dhcp4.leases",
+        "severity": "INFO",
+        "output_options": [
+          {
+            "output": "stdout",
+            "maxver": 10
+          }
+        ]
       }
     ]
   }
@@ -97,9 +122,13 @@ EOF
 
 # Function to start DHCP server
 start_dhcp() {
+    
+    log "Ensure interface is up"
+    ifconfig ${INTERFACE} up
+
     log "Starting dhcp server..."
     
-    kea-dhcp4 -c /etc/kea-dhcp4.conf &
+    kea-dhcp4 -d -c /etc/kea-dhcp4.conf &
 }
 
 
@@ -107,6 +136,7 @@ start_dhcp() {
 cleanup() {
     log "Stopping dhcp server"
     killall kea-dhcp4
+    killall sleep
     log "Cleanup completed."
 
 }

@@ -6,5 +6,4 @@ services:
     privileged: true
     command: /bin/start_dhcpd.sh
     environment: 
-      - AP_INTERFACE=wlan1
-      - OUTBOUND_INTERFACE=wlan0
+      - INTERFACE=wlan1
