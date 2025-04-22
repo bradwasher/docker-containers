@@ -1,0 +1,3 @@
+docker run -it --rm --privileged --network host -e AP_INTERFACE=wlan1 -e OUTBOUND_INTERFACE=wlan0 -e SSID=Testing123 -e BSSID=DE:AD:BE:EF:12:34 -e WPA=0 hostapd:latest /bin/start_hostapd.sh
+
+

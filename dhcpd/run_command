@@ -1,0 +1,1 @@
+docker run -it --rm --privileged --network host -e INTERFACE=wlan1 -e IP_ADDR=192.168.200.1 -e SUBNET=192.168.200.0 -e SUBNET_CIDR=/24 dhcpd:latest /bin/start_dhcpd.sh

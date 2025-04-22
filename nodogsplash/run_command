@@ -1,0 +1,1 @@
+docker run -it --rm --privileged --network host -e IP_ADDRESS=192.168.200.1 -e GATEWAY_INTERFACE=wlan1 -e NETWORK=192.168.200.0 -e NETWORK_CIDR=/24 nodogsplash:latest /bin/start_nodogsplash.sh
