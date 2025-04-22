@@ -5,7 +5,10 @@ services:
     container_name: nodog
     network_mode: host
     privileged: true
-    #command: /bin/start_nodogsplash.sh
+    command: /bin/start_nodogsplash.sh
     environment:
-      - INTERFACE=wlan1
+      - IP_ADDRESS=192.168.200.1
+      - NETWORK=192.168.200.0
+      - NETWORK_CIDR=/24
+      - GATEWAY_INTERFACE=wlan1
 

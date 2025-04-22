@@ -9,5 +9,6 @@ services:
     environment:
       - AP_INTERFACE=wlan1
       - OUTBOUND_INTERFACE=wlan0
-      - SSID=poop-dollah
+      - SSID=Testing123
+      - WPA=0
 
