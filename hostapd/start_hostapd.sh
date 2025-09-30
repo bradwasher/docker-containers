@@ -52,60 +52,126 @@ fi
 : ${WPA:=2}
 : ${WPA_PASSPHRASE:=password}
 : ${WPA_KEY_MGMT:=WPA-PSK}
-: ${WPA_PAIRWISE:=TKIP}
-: ${RSN_PAIRWISE:=CCMP}
+: ${WPA_PAIRWISE:=CCMP TKIP}
+: ${RSN_PAIRWISE:=CCMP TKIP}
 
 bssid=$(ip link show $AP_INTERFACE | awk '/link/ {print $2}')
 : ${BSSID:=$bssid}
 echo AP BSSID ${BSSID}
 
+# Check to see if we need a sub mode to set the
+# adapter mode
+case "$HW_MODE" in
+  "n"|"ax")
+    if [ ${CHANNEL} -le 14 ]; then
+        HW_SUB_MODE=g
+    else
+        HW_SUB_MODE=a
+    fi
+    log Submode is ${HW_SUB_MODE}
+    ;;
+esac
 
 configure_hostapd() {
     if [ ! -f "/etc/hostapd.conf" ]; then
+        log "Writing configuration file"
         cat > "/etc/hostapd.conf" <<EOF
+interface=${AP_INTERFACE}
+ssid=${SSID}
+bssid=${BSSID}
+beacon_int=${BEACON_INT}
+ctrl_interface=${CTRL_INTERFACE}
 driver=${DRIVER}
+macaddr_acl=${MACADDR_ACL}
+ignore_broadcast_ssid=${IGNORE_BROADCAST_SSID}
+country_code=${COUNTRY_CODE}
 
 logger_syslog=${LOGGER_SYSLOG}
 logger_syslog_level=${LOGGER_SYSLOG_LEVEL}
 logger_stdout=${LOGGER_STDOUT}
 logger_stdout_level=${LOGGER_STDOUT_LEVEL}
 
-country_code=${COUNTRY_CODE}
-
-ieee80211d=${IEEE80211D}
-ieee80211h=${IEEE80211H}
-
-hw_mode=${HW_MODE}
-beacon_int=${BEACON_INT}
 channel=${CHANNEL}
-interface=${AP_INTERFACE}
+EOF
 
-ssid=${SSID}
-bssid=${BSSID}
-
-ctrl_interface=${CTRL_INTERFACE}
-
-macaddr_acl=${MACADDR_ACL}
-
-ignore_broadcast_ssid=${IGNORE_BROADCAST_SSID}
+    if [ ${HW_MODE} = "b" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=${HW_MODE}
+ieee80211d=1
+ieee80211h=1
 
 EOF
+    elif [ ${HW_MODE} = "a" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=${HW_MODE}
+ieee80211a=1
+
+EOF
+    elif [ ${HW_MODE} = "g" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=${HW_MODE}
+ieee80211d=1
+ieee80211h=1
+wmm_enabled=1
+
+EOF
+    elif [ ${HW_MODE} = "n" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=${HW_SUB_MODE}
+ieee80211n=1
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40][DSSS_CCK-40]
+wmm_enabled=1
+
+EOF
+    elif [ ${HW_MODE} = "ac" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=a
+ieee80211n=1
+ieee80211ac=1
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=42
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+vht_capab=[SHORT-GI-80]
+wmm_enabled=1
+
+EOF
+    elif [ ${HW_MODE} = "ax" ]; then
+        cat >> "/etc/hostapd.conf" <<EOF
+hw_mode=${HW_SUB_MODE}
+ieee80211n=1
+ieee80211ac=1
+ieee80211ax=1
+he_oper_chwidth=1
+he_oper_centr_freq_seg0_idx=42
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=42
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+vht_capab=[SHORT-GI-80][VHT160]
+# he_capab=[HE40][HE80][SHORT-GI-80]
+
+EOF
+
     fi
 
     # specify encryption
     # WPA 2 or 3 encryption
     if [ ${WPA} != "0" ]; then
+        if [ ${WPA} == "3" ]; then
+            WPA_KEY_MGMT=SAE
+        fi
         cat >> "/etc/hostapd.conf" <<EOF
 wpa=${WPA}
 wpa_passphrase=${WPA_PASSPHRASE}
 wpa_key_mgmt=${WPA_KEY_MGMT}
+ieee80211w=2
 wpa_pairwise=${WPA_PAIRWISE}
 rsn_pairwise=${RSN_PAIRWISE}
 auth_algs=${AUTH_ALGS}
 EOF
     fi
-
+    fi
 }
+
 
 
 # Function to setup iptables
@@ -168,7 +234,7 @@ cleanup() {
     iptables -F HOSTAPD || :
     iptables -X HOSTAPD || :
 
-    log "Stopping dhcp server"
+    log "Stopping hostapd server"
     killall hostapd
     killall sleep
     log "Cleanup completed."
@@ -179,6 +245,9 @@ cleanup() {
 # Function to start hostapd
 start_hostapd() {
     log "Starting hostapd..."
+    echo "------------- hostapd.conf ---------------------------"
+    cat /etc/hostapd.conf
+    echo "------------------------------------------------------"
     /usr/sbin/hostapd /etc/hostapd.conf &
 }
 

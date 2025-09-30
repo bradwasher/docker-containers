@@ -1,0 +1,24 @@
+FROM apache/superset:latest
+
+# Become root so we can write into /app/.venv during build
+USER root
+
+# install libraries necessary for sql -> mongodb drivers
+RUN apt update && apt install -y build-essential pkg-config libmariadb-dev-compat libmariadb-dev
+
+
+
+# Copy your extra deps list (e.g., Pillow, drivers)
+ARG EXTRA_PY_REQUIREMENTS=docker/requirements-local.txt
+COPY ${EXTRA_PY_REQUIREMENTS} /tmp/requirements-local.txt
+
+# Ensure pip exists in the same interpreter Superset uses, then install extras
+RUN python -m ensurepip --upgrade \
+ && python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+ && python -m pip install --no-cache-dir -r /tmp/requirements-local.txt \
+ && rm -f /tmp/requirements-local.txt \
+ && chown -R superset:superset /app
+
+# Drop back to the non-root user the base image expects
+USER superset
+

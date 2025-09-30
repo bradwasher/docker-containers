@@ -1,0 +1,29 @@
+These containers provide a link from Superset -> mongobi -> mongodb
+
+The compose file starts the following containers
+- superset		172.30.0.10
+- mongobi		172.30.0.11
+- superset-redis	172.30.0.12
+- superset-db		172.30.0.13
+- superset-init 	172.30.0.14	(just initializes the first time and exits)
+
+Connection fields for the monbobi are set in the .env file
+
+Once running, add the database connection within superset with the following connection string to your mongobi container:
+mongobi://mongobi:3307/<your_db>
+
+# to run the first time
+docker compose up -d
+docker compose --profile init run --rm superset-init
+
+# to run subsequent times, just run
+docker compose up -d
+
+
+# use the following after changes to be sure they are implemented
+docker compose down
+docker compose build --no-cache superset superset-init
+docker compose up -d
+docker compose --profile init run --rm superset-init
+
+

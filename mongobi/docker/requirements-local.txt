@@ -1,0 +1,15 @@
+
+Pillow
+psycopg2-binary
+mysqlclient
+
+# choice of drivers to connect to mongosqld
+sqlalchemy-mongobi # this is the only one I could get to work connecting to an unauthenticated mongodb
+#mysql-connector-python
+#PyMySQL
+
+
+#sqlalchemy-mongobi is an older solution.  I came accross this warning when I was testing it from python:
+#Warning: Dialect mongobi:mysqldb will not make use of SQL compilation caching as it does not set the 'supports_statement_cache' attribute to ``True``.  This can have significant performance implications including some performance degradations in comparison to prior SQLAlchemy versions.  Dialect maintainers should seek to set this attribute to True after appropriate development and testing for SQLAlchemy 1.4 caching support.   Alternatively, this attribute may be set to False which will disable this warning. (Background on this error at: https://sqlalche.me/e/14/cprf)
+
+
